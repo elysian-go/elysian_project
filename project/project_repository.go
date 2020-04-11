@@ -1,15 +1,20 @@
 package project
 
 import (
+	"context"
+	"errors"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ProjectRepository struct {
-	DB *mongo.Database
+	DB 			*mongo.Database
+	collection 	*mongo.Collection
 }
 
 func ProvideProjectRepository(db *mongo.Database) ProjectRepository {
-	return ProjectRepository{DB: db}
+	return ProjectRepository{DB: db, collection: db.Collection("project")}
 }
 
 func (r *ProjectRepository) FindAll() []Project {
@@ -18,11 +23,33 @@ func (r *ProjectRepository) FindAll() []Project {
 }
 
 func (r *ProjectRepository) FindByID(id string) (Project, error) {
-	return Project{}, nil
+	objId, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.D{{"_id", objId}}
+
+	var project Project
+	res := r.collection.FindOne(context.TODO(), filter)
+	if res.Err() != nil {
+		return Project{}, errors.New("project not found by id")
+	}
+
+	err := res.Decode(&project)
+	if err != nil {
+		return Project{}, errors.New("error while decoding result to project obj")
+	}
+	return project, nil
 }
 
-func (r *ProjectRepository) Save(project Project) (Project, error) {
-	return Project{}, nil
+func (r *ProjectRepository) Save(project Project) (string, error) {
+	result, err := r.collection.InsertOne(context.TODO(), project)
+	if err != nil {
+		return "", errors.New("internal error")
+	}
+
+	var resId, ok = result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return "", errors.New("internal error")
+	}
+	return resId.Hex(), nil
 }
 
 func (r *ProjectRepository) Delete(project Project) {

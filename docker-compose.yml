@@ -7,12 +7,21 @@ services:
     image: elysian_project
     ports:
       - 3001:8080
+    env_file: elysian_project/.env
     links:
-      - postgres
+      - project-db
       - redis
-    env_file: .env
-    volumes:
-      - .:/app
     depends_on:
-      - postgres
+      - project-db
       - redis
+    volumes:
+      - $PWD/elysian_project:/app
+  project-db:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: docker
+    ports:
+      - 27017:27017
+    volumes:
+      - $PWD/dev/data/project_db:/data/db

@@ -2,6 +2,7 @@ package project
 
 import (
 	"errors"
+	"log"
 )
 
 type ProjectService struct {
@@ -25,11 +26,16 @@ func (s *ProjectService) FindByID(id string) (Project, error) {
 }
 
 func (s *ProjectService) Save(project Project) (Project, error) {
-	project, err := s.ProjectRepository.Save(project)
+	projectId, err := s.ProjectRepository.Save(project)
 	if err != nil {
-		return project, errors.New("duplicate entry on email")
+		return Project{}, errors.New("could not save project to database")
 	}
-	return project, nil
+	log.Println(projectId)
+	projectSaved, err := s.FindByID(projectId)
+	if err != nil {
+		return Project{}, errors.New("could not retrieve saved document")
+	}
+	return projectSaved, nil
 }
 
 func (s *ProjectService) Update(project Project) (Project, error) {

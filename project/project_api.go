@@ -37,8 +37,20 @@ func (p *ProjectAPI) Create(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	//Getting user id (aka owner id) from context
+	//value := c.MustGet("user_id")
+	//userId, ok := value.(string)
+	//if !ok {
+	//	log.Printf("got data of type %T but wanted string", value)
+	//}
+	projectModel.Owner = "toot"
+	project, err := p.ProjectService.Save(ToProject(projectModel))
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"project": projectModel})
+	c.JSON(http.StatusOK, gin.H{"project": project})
 }
 
 func (p *ProjectAPI) Delete(c *gin.Context) {

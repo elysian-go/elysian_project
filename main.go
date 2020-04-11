@@ -25,7 +25,8 @@ func initDB() *mongo.Client {
 		":"+os.Getenv("DB_PORT")+ 			//port
 		"/?"+
 		"ssl="+os.Getenv("DB_SSLMODE")+
-		"appName="+os.Getenv("MONGO_APP_NAME"))
+		"&appName="+os.Getenv("MONGO_APP_NAME")+
+		"&connectTimeoutMS="+os.Getenv("DB_TIMEOUT"))
 	//Context of DB
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second) //TODO set timout in env
 	// Connect to MongoDB
@@ -82,13 +83,10 @@ func main() {
 
 	v1 := router.Group("/api/v1")
 	{
-		proj := v1.Group("/project")
-		proj.POST("", projectAPI.Create)
-
-		authAcc := v1.Group("/project")
-		authAcc.Use(AuthRequired())
-		authAcc.GET("", projectAPI.FindAll)
-		authAcc.PATCH("", projectAPI.Update)
+		authProj := v1.Group("/project")
+		authProj.POST("", projectAPI.Create) //TODO slide down to require auth
+		authProj.Use(AuthRequired())
+		authProj.GET("", projectAPI.FindAll)
 	}
 	err := router.Run(":"+os.Getenv("SVC_PORT"))
 	if err != nil {
