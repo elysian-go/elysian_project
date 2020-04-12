@@ -7,13 +7,14 @@ package main
 
 import (
 	"github.com/VictorDebray/elysian_project/project"
+	"github.com/jinzhu/gorm"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Injectors from container.go:
 
-func InitProjectAPI(db *mongo.Database) project.ProjectAPI {
-	projectRepository := project.ProvideProjectRepository(db)
+func InitProjectAPI(rdb *gorm.DB, db *mongo.Database) project.ProjectAPI {
+	projectRepository := project.ProvideProjectRepository(rdb, db)
 	projectService := project.ProvideProjectService(projectRepository)
 	projectAPI := project.ProvideProjectAPI(projectService)
 	return projectAPI

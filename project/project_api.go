@@ -2,6 +2,7 @@ package project
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -38,12 +39,12 @@ func (p *ProjectAPI) Create(c *gin.Context) {
 		return
 	}
 	//Getting user id (aka owner id) from context
-	//value := c.MustGet("user_id")
-	//userId, ok := value.(string)
-	//if !ok {
-	//	log.Printf("got data of type %T but wanted string", value)
-	//}
-	projectModel.Owner = "toot"
+	value := c.MustGet("user_id")
+	userId, ok := value.(string)
+	if !ok {
+		log.Printf("got data of type %T but wanted string", value)
+	}
+	projectModel.Owner = userId
 	project, err := p.ProjectService.Save(ToProject(projectModel))
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})

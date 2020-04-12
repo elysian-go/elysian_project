@@ -3,18 +3,21 @@ package project
 import (
 	"context"
 	"errors"
+	"github.com/jinzhu/gorm"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type ProjectRepository struct {
-	DB 			*mongo.Database
-	collection 	*mongo.Collection
+	RDB        *gorm.DB
+	DB         *mongo.Database
+	collection *mongo.Collection
 }
 
-func ProvideProjectRepository(db *mongo.Database) ProjectRepository {
-	return ProjectRepository{DB: db, collection: db.Collection("project")}
+func ProvideProjectRepository(rdb *gorm.DB, db *mongo.Database) ProjectRepository {
+	return ProjectRepository{RDB: rdb, DB: db, collection: db.Collection("project")}
 }
 
 func (r *ProjectRepository) FindAll() []Project {

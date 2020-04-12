@@ -10,9 +10,11 @@ services:
     env_file: elysian_project/.env
     links:
       - project-db
+      - project-rdb
       - redis
     depends_on:
       - project-db
+      - project-rdb
       - redis
     volumes:
       - $PWD/elysian_project:/app
@@ -25,3 +27,13 @@ services:
       - 27017:27017
     volumes:
       - $PWD/dev/data/project_db:/data/db
+  project-rdb:
+    image: postgres_uuid
+    build: pgres-extention
+    environment:
+      POSTGRES_PASSWORD: docker
+      POSTGRES_USER: postgres
+    ports:
+      - 5433:5432
+    volumes:
+      - $PWD/dev/data/project_rdb:/var/lib/postgresql/data

@@ -20,6 +20,7 @@ func (s *ProjectService) FindAll() []Project {
 func (s *ProjectService) FindByID(id string) (Project, error) {
 	project, err := s.ProjectRepository.FindByID(id)
 	if err != nil {
+		log.Println(err.Error())
 		return project, errors.New("resource not found")
 	}
 	return project, err
