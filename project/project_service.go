@@ -26,6 +26,16 @@ func (s *ProjectService) FindByID(id string) (Project, error) {
 	return project, err
 }
 
+// FindProjectsByAccountID find projects of given account id
+func (s *ProjectService) FindProjectsByOwner(ownerId string) ([]Project, error) {
+	projects, err := s.ProjectRepository.FindByProjectsAccountId(ownerId)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, errors.New("resource not found")
+	}
+	return projects, err
+}
+
 func (s *ProjectService) Save(project Project) (Project, error) {
 	projectId, err := s.ProjectRepository.Save(project)
 	if err != nil {
@@ -44,5 +54,5 @@ func (s *ProjectService) Update(project Project) (Project, error) {
 }
 
 func (s *ProjectService) Delete(project Project) {
-	s.ProjectRepository.Delete(project)
+	s.ProjectRepository.Delete(project.ID)
 }

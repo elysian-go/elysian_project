@@ -43,6 +43,8 @@ func (p *ProjectAPI) Create(c *gin.Context) {
 	userId, ok := value.(string)
 	if !ok {
 		log.Printf("got data of type %T but wanted string", value)
+		c.JSON(http.StatusInternalServerError, "internal error")
+		return
 	}
 	projectModel.Owner = userId
 	project, err := p.ProjectService.Save(ToProject(projectModel))

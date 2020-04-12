@@ -108,7 +108,7 @@ func main() {
 	{
 		authProj := v1.Group("/project")
 		authProj.Use(AuthRequired())
-		authProj.GET("", projectAPI.FindAll)
+		authProj.POST("", projectAPI.Create)
 	}
 	err := router.Run(":"+os.Getenv("SVC_PORT"))
 	if err != nil {
