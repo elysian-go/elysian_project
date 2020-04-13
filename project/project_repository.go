@@ -2,12 +2,11 @@ package project
 
 import (
 	"context"
-	"errors"
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"log"
 )
 
 type ProjectRepository struct {
@@ -27,10 +26,10 @@ func (r *ProjectRepository) FindAll() []Project {
 
 func (r *ProjectRepository) FindByProjectsAccountId(accountId string) ([]Project, error) {
 	var projects []Project
-	rows, err := r.RDB.Raw("SELECT * FROM account WHERE id = ?", accountId).Rows()
+	rows, err := r.RDB.Raw("SELECT * FROM owner_project WHERE user_id = ?", accountId).Rows()
 	defer rows.Close()
 	if err != nil {
-		return nil, errors.New("internal error")
+		return nil, errors.Wrap(err, "error in find project owner rows")
 	}
 
 	for rows.Next() {
@@ -38,7 +37,7 @@ func (r *ProjectRepository) FindByProjectsAccountId(accountId string) ([]Project
 		rows.Scan(&ownerProj)
 		project, err := r.FindByID(ownerProj.ProjectId)
 		if err != nil {
-			return nil, errors.New("error while retrieving project by id")
+			return nil, errors.Wrap(err, "error while retrieving project by id from row")
 		}
 		projects = append(projects, project)
 	}
@@ -52,12 +51,12 @@ func (r *ProjectRepository) FindByID(id string) (Project, error) {
 	var project Project
 	res := r.collection.FindOne(context.TODO(), filter)
 	if res.Err() != nil {
-		return Project{}, errors.New("project not found by id")
+		return Project{}, errors.Wrap(res.Err(), "project not found by id")
 	}
 
 	err := res.Decode(&project)
 	if err != nil {
-		return Project{}, errors.New("error while decoding result to project obj")
+		return Project{}, errors.Wrap(err,"error while decoding result to project obj")
 	}
 	return project, nil
 }
@@ -65,13 +64,12 @@ func (r *ProjectRepository) FindByID(id string) (Project, error) {
 func (r *ProjectRepository) SaveProject(project Project) (string, error) {
 	result, err := r.collection.InsertOne(context.TODO(), project)
 	if err != nil {
-		log.Println(err.Error())
-		return "", errors.New("error while inserting project")
+		return "", errors.Wrap(err, "error while inserting project")
 	}
 
 	var resId, ok = result.InsertedID.(primitive.ObjectID)
 	if !ok {
-		return "", errors.New("error while casting InsertedID to ObjectID")
+		return "", errors.Wrap(err, "error while casting InsertedID to ObjectID")
 	}
 	return resId.Hex(), nil
 }
@@ -79,8 +77,7 @@ func (r *ProjectRepository) SaveProject(project Project) (string, error) {
 func (r *ProjectRepository) SaveOwnerProject(ownerProject OwnerProject) (OwnerProject, error) {
 	err := r.RDB.Save(&ownerProject).Error
 	if err != nil {
-		log.Println(err.Error())
-		return OwnerProject{}, err
+		return OwnerProject{}, errors.Wrap(err, "error while saving owner project")
 	}
 	return ownerProject, nil
 }
@@ -88,9 +85,7 @@ func (r *ProjectRepository) SaveOwnerProject(ownerProject OwnerProject) (OwnerPr
 func (r *ProjectRepository) Save(project Project) (string, error) {
 	projectId, err := r.SaveProject(project)
 	if err != nil {
-		log.Println(err.Error())
-		log.Println("error while inserting project in transaction")
-		return "", err
+		return "", errors.Wrap(err, "error while inserting project in transaction")
 	}
 
 	ownerProj := OwnerProject{
@@ -98,10 +93,8 @@ func (r *ProjectRepository) Save(project Project) (string, error) {
 		ProjectId: projectId,
 	}
 	if err = r.RDB.Create(&ownerProj).Error; err != nil {
-		log.Println(err.Error())
-		log.Println("error while creating OwnerProject in transaction")
 		r.Delete(projectId)
-		return "", err
+		return "", errors.Wrap(err, "error while creating OwnerProject in transaction")
 	}
 	return projectId, err
 }
@@ -111,8 +104,7 @@ func (r *ProjectRepository) Delete(id string) error {
 	filter := bson.D{{"_id", objId}}
 	_, err := r.collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
-		log.Println(err.Error())
-		return err
+		return errors.Wrap(err, "error while deleting project")
 	}
 	return nil
 }

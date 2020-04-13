@@ -1,8 +1,7 @@
 package project
 
 import (
-	"errors"
-	"log"
+	"github.com/pkg/errors"
 )
 
 type ProjectService struct {
@@ -20,8 +19,7 @@ func (s *ProjectService) FindAll() []Project {
 func (s *ProjectService) FindByID(id string) (Project, error) {
 	project, err := s.ProjectRepository.FindByID(id)
 	if err != nil {
-		log.Println(err.Error())
-		return project, errors.New("resource not found")
+		return project, errors.Wrap(err,"could not find project by id")
 	}
 	return project, err
 }
@@ -30,8 +28,7 @@ func (s *ProjectService) FindByID(id string) (Project, error) {
 func (s *ProjectService) FindProjectsByOwner(ownerId string) ([]Project, error) {
 	projects, err := s.ProjectRepository.FindByProjectsAccountId(ownerId)
 	if err != nil {
-		log.Println(err.Error())
-		return nil, errors.New("resource not found")
+		return nil, errors.Wrap(err, "could not find projects by owner")
 	}
 	return projects, err
 }
@@ -39,12 +36,11 @@ func (s *ProjectService) FindProjectsByOwner(ownerId string) ([]Project, error) 
 func (s *ProjectService) Save(project Project) (Project, error) {
 	projectId, err := s.ProjectRepository.Save(project)
 	if err != nil {
-		return Project{}, errors.New("could not save project to database")
+		return Project{}, errors.Wrap(err, "could not save project to database")
 	}
-	log.Println(projectId)
 	projectSaved, err := s.FindByID(projectId)
 	if err != nil {
-		return Project{}, errors.New("could not retrieve saved document")
+		return Project{}, errors.Wrap(err, "could not retrieve saved document")
 	}
 	return projectSaved, nil
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type ProjectAPI struct {
@@ -24,7 +25,7 @@ func (p *ProjectAPI) FindByID(c *gin.Context) {
 	id :=  c.Param("id")
 	project, err := p.ProjectService.FindByID(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		c.Status(http.StatusNotFound)
 		return
 	}
 
@@ -49,7 +50,13 @@ func (p *ProjectAPI) Create(c *gin.Context) {
 	projectModel.Owner = userId
 	project, err := p.ProjectService.Save(ToProject(projectModel))
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		log.Println(err)
+		switch {
+		case strings.Contains(err.Error(), "duplicate"):
+			c.JSON(http.StatusConflict, gin.H{"error": "project has already an owner"})
+		default:
+			c.Status(http.StatusInternalServerError)
+		}
 		return
 	}
 
