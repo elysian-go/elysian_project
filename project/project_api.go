@@ -16,13 +16,28 @@ func ProvideProjectAPI(p ProjectService) ProjectAPI {
 }
 
 func (p *ProjectAPI) FindAll(c *gin.Context) {
-	projects := p.ProjectService.FindAll()
+	value := c.MustGet("user_id")
+	userId, ok := value.(string)
+	if !ok {
+		log.Printf("got data of type %T but wanted string", value)
+		c.JSON(http.StatusInternalServerError, "internal error")
+		return
+	}
+	var projectsOwned, projectsCollaborator []Project
+	var err error
+	projectsOwned, err = p.ProjectService.FindProjectsByOwner(userId)
+	if err != nil {
+		log.Println(err.Error())
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"projects": ToProjectModels(projects)})
+	c.JSON(http.StatusOK, gin.H{
+		"projectsOwned": ToProjectModels(projectsOwned),
 }
 
 func (p *ProjectAPI) FindByID(c *gin.Context) {
-	id :=  c.Param("id")
+	id :=  c.Param("pid")
 	project, err := p.ProjectService.FindByID(id)
 	if err != nil {
 		c.Status(http.StatusNotFound)

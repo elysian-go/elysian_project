@@ -12,8 +12,10 @@ func ToProject(projectModel Model) Project {
 func ToProjectModel(project Project) Model {
 	return Model{
 		ID: project.ID,
-		CreatedAt: project.CreatedAt,
-		UpdatedAt: project.UpdatedAt,
+		Title:       project.Title,
+		Description: project.Description,
+		Owner:       project.Owner,
+		Archived:    project.Archived,
 	}
 }
 

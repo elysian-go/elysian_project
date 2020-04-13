@@ -26,7 +26,7 @@ func (s *ProjectService) FindByID(id string) (Project, error) {
 
 // FindProjectsByAccountID find projects of given account id
 func (s *ProjectService) FindProjectsByOwner(ownerId string) ([]Project, error) {
-	projects, err := s.ProjectRepository.FindByProjectsAccountId(ownerId)
+	projects, err := s.ProjectRepository.FindProjectsByOwnerId(ownerId)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not find projects by owner")
 	}

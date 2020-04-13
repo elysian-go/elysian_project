@@ -24,18 +24,18 @@ func (r *ProjectRepository) FindAll() []Project {
 	return projects
 }
 
-func (r *ProjectRepository) FindByProjectsAccountId(accountId string) ([]Project, error) {
+func (r *ProjectRepository) FindProjectsByOwnerId(accountId string) ([]Project, error) {
 	var projects []Project
-	rows, err := r.RDB.Raw("SELECT * FROM owner_project WHERE user_id = ?", accountId).Rows()
+	rows, err := r.RDB.Raw("SELECT project_id FROM owner_project WHERE user_id = ?", accountId).Rows()
 	defer rows.Close()
 	if err != nil {
 		return nil, errors.Wrap(err, "error in find project owner rows")
 	}
 
 	for rows.Next() {
-		var ownerProj OwnerProject
-		rows.Scan(&ownerProj)
-		project, err := r.FindByID(ownerProj.ProjectId)
+		var projectId string
+		rows.Scan(&projectId)
+		project, err := r.FindByID(projectId)
 		if err != nil {
 			return nil, errors.Wrap(err, "error while retrieving project by id from row")
 		}
