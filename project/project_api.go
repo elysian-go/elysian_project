@@ -78,6 +78,45 @@ func (p *ProjectAPI) Create(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"project": project})
 }
 
+func (p *ProjectAPI) AddCollaborator(c *gin.Context) {
+	var addContributorModel AddContributorModel
+	err := c.BindJSON(&addContributorModel)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	projectId := c.Param("pid")
+	value := c.MustGet("user_id")
+	userId, ok := value.(string)
+	if !ok {
+		log.Printf("got data of type %T but wanted string", value)
+		c.JSON(http.StatusInternalServerError, "internal error")
+		return
+	}
+
+	projectOwner, err := p.ProjectService.FindOwnerProjectByIds(userId, projectId)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access forbidden, please make sure you are logged in" +
+			" and the owner of the project"})
+		return
+	}
+
+	err = p.ProjectService.SaveCollaborator(projectOwner.ProjectId, addContributorModel.ID[0])
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "duplicate"):
+			c.JSON(http.StatusConflict, gin.H{"error": "user is already contributor of project"})
+		default:
+			c.Status(http.StatusInternalServerError)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": "contributors added successfully"})
+}
+
 func (p *ProjectAPI) Delete(c *gin.Context) {
 	//id := c.Param("id")
 	project := Project{} //p.ProjectService.FindByID(id)

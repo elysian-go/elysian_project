@@ -57,7 +57,7 @@ func initRelationalDB() *gorm.DB {
 	}
 	db.LogMode(true)
 	db.SingularTable(true)
-	db.AutoMigrate(&project.OwnerProject{})
+	db.AutoMigrate(&project.OwnerProject{}, &project.CollaboratorProject{})
 
 	return db
 }
@@ -110,9 +110,10 @@ func main() {
 		authProj.Use(AuthRequired())
 		authProj.POST("", projectAPI.Create)
 		authProj.GET("", projectAPI.FindAll)
+		authProj.POST("/:pid/add-contributor", projectAPI.AddCollaborator)
 		authProj.GET("/:pid", projectAPI.FindByID)
 	}
-	err := router.Run(":"+os.Getenv("SVC_PORT"))
+	err := router.Run(":" + os.Getenv("SVC_PORT"))
 	if err != nil {
 		panic(err)
 	}
