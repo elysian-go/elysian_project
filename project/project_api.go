@@ -26,6 +26,7 @@ func (p *ProjectAPI) FindAll(c *gin.Context) {
 	var projectsOwned, projectsCollaborator []Project
 	var err error
 	projectsOwned, err = p.ProjectService.FindProjectsByOwner(userId)
+	projectsCollaborator, err = p.ProjectService.FindProjectsByCollaborator(userId)
 	if err != nil {
 		log.Println(err.Error())
 		c.Status(http.StatusInternalServerError)
@@ -34,6 +35,7 @@ func (p *ProjectAPI) FindAll(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"projectsOwned": ToProjectModels(projectsOwned),
+		"projectsCollaborator": ToProjectModels(projectsCollaborator)})
 }
 
 func (p *ProjectAPI) FindByID(c *gin.Context) {

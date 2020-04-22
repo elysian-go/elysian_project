@@ -12,8 +12,12 @@ func ProvideProjectService(p ProjectRepository) ProjectService {
 	return ProjectService{ProjectRepository: p}
 }
 
-func (s *ProjectService) FindAll() []Project {
-	return s.ProjectRepository.FindAll()
+func (s *ProjectService) FindByID(id string) (Project, error) {
+	project, err := s.ProjectRepository.FindByID(id)
+	if err != nil {
+		return project, errors.Wrap(err, "could not find project by id")
+	}
+	return project, nil
 }
 
 // FindProjectsByCollaborator find collaborator projects of given user id
@@ -43,6 +47,7 @@ func (s *ProjectService) FindOwnerProjectByIds(ownerId string, projectId string)
 	return ownerProject, nil
 }
 
+// Save save project
 func (s *ProjectService) Save(project Project) (Project, error) {
 	projectId, err := s.ProjectRepository.Save(project)
 	if err != nil {
