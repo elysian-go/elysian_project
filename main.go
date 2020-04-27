@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/VictorDebray/elysian_project/project"
+	"github.com/elysian-go/redis-sentinel-store/redisstore"
 	"github.com/gin-contrib/location"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -62,17 +62,6 @@ func initRelationalDB() *gorm.DB {
 	return db
 }
 
-func initStore() redis.Store {
-	store, err := redis.NewStore(10, "tcp",
-		os.Getenv("REDIS_HOST")+":"+os.Getenv("REDIS_PORT"),
-		os.Getenv("REDIS_PWD"), []byte("secret"))
-	if err != nil {
-		panic(err)
-	}
-
-	return store
-}
-
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
@@ -94,7 +83,7 @@ func main() {
 	defer dbClient.Disconnect(context.Background())
 	db := dbClient.Database(os.Getenv("DB_NAME"))
 
-	store := initStore()
+	store := redisstore.InitStore()
 	projectAPI := InitProjectAPI(rdb, db)
 
 	// Creates a gin router with default middleware:
